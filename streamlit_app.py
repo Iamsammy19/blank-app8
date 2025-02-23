@@ -11,14 +11,6 @@ import plotly.express as px
 # Title of the app
 st.title("Ultimate Football Match Prediction and Bet Analysis")
 
-# API Keys (Replace with your own keys)
-FOOTBALL_DATA_API_KEY = "YOUR_FOOTBALL_DATA_API_KEY"
-SPORTSDB_API_KEY = "YOUR_SPORTSDB_API_KEY"
-SPORTRADAR_API_KEY = "YOUR_SPORTRADAR_API_KEY"
-
-# Sidebar for user inputs
-st.sidebar.header("User Input")
-
 # Load enhanced dataset
 @st.cache_data
 def load_enhanced_data():
@@ -52,7 +44,7 @@ def train_advanced_model(data):
 model = train_advanced_model(data)
 
 # User inputs for match prediction
-st.sidebar.subheader("Match Prediction")
+st.sidebar.header("Match Prediction")
 home_team = st.sidebar.selectbox("Home Team", data['home_team'].unique())
 away_team = st.sidebar.selectbox("Away Team", data['away_team'].unique())
 
@@ -64,7 +56,7 @@ if st.sidebar.button("Predict Match Outcome"):
     st.success(f"Predicted Outcome: {prediction}")
 
 # Bookie selection and bet code analysis
-st.sidebar.subheader("Bet Code Analysis")
+st.sidebar.header("Bet Code Analysis")
 bookie = st.sidebar.selectbox("Select Bookie", ["SportyBet", "Betway", "1xBet", "BetKing"])
 bet_code = st.sidebar.text_input("Enter Bet Code (e.g., LCQXR5):")
 
@@ -150,7 +142,7 @@ if st.sidebar.button("Analyze Bet Code"):
         st.warning("Please enter a bet code.")
 
 # Additional Betting Tips
-st.sidebar.subheader("Additional Betting Tips")
+st.sidebar.header("Additional Betting Tips")
 if st.sidebar.button("Generate Betting Tips"):
     st.info("Betting Tips:")
     st.write("1. **Home Team to Win Either Half**: High probability based on form.")
@@ -160,7 +152,7 @@ if st.sidebar.button("Generate Betting Tips"):
     st.write("5. **Handicap Betting**: Useful for matches with a clear favorite.")
 
 # Upset Detection
-st.sidebar.subheader("Upset Detection")
+st.sidebar.header("Upset Detection")
 if st.sidebar.button("Check for Potential Upset"):
     # Simulate upset detection logic
     upset_probability = 0.2  # Example probability
@@ -171,8 +163,9 @@ if st.sidebar.button("Check for Potential Upset"):
 
 # Fetch live match data from an API
 def fetch_live_data():
+    api_key = "YOUR_FOOTBALL_DATA_API_KEY"  # Replace with your API key
     url = f"https://api.football-data.org/v4/matches"
-    headers = {"X-Auth-Token": FOOTBALL_DATA_API_KEY}
+    headers = {"X-Auth-Token": api_key}
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         return response.json()
@@ -196,64 +189,3 @@ st.write(data)
 st.subheader("Advanced Visualizations")
 fig = px.bar(data, x='home_team', y='home_goals', color='result', title="Home Team Goals by Result")
 st.plotly_chart(fig)
-
-# Fetch player pictures and club badges
-def fetch_player_pictures_and_badges(team_name):
-    url = f"https://www.thesportsdb.com/api/v1/json/{SPORTSDB_API_KEY}/searchplayers.php?t={team_name}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        players = data.get("player", [])
-        return players
-    else:
-        st.error("Failed to fetch player pictures and badges.")
-        return []
-
-# Display player pictures and club badges
-st.subheader("Player Pictures and Club Badges")
-team_name = st.text_input("Enter Team Name to Fetch Player Pictures and Badges:")
-if st.button("Fetch Player Pictures and Badges"):
-    players = fetch_player_pictures_and_badges(team_name)
-    if players:
-        st.write("### Player Pictures")
-        for player in players:
-            st.image(player.get("strThumb", ""), caption=player.get("strPlayer", ""), width=100)
-        st.write("### Club Badge")
-        st.image(players[0].get("strTeamBadge", ""), caption=team_name, width=100)
-
-# Fetch player stats
-def fetch_player_stats(player_id):
-    url = f"https://api.football-data.org/v4/players/{player_id}"
-    headers = {"X-Auth-Token": FOOTBALL_DATA_API_KEY}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error("Failed to fetch player stats.")
-        return None
-
-# Display player stats
-st.subheader("Player Stats")
-player_id = st.text_input("Enter Player ID to Fetch Stats:")
-if st.button("Fetch Player Stats"):
-    player_stats = fetch_player_stats(player_id)
-    if player_stats:
-        st.write(pd.DataFrame(player_stats).T)
-
-# Fetch injury updates
-def fetch_injury_updates(team_id):
-    url = f"https://api.sportradar.com/soccer/trial/v4/en/teams/{team_id}/injuries.json?api_key={SPORTRADAR_API_KEY}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error("Failed to fetch injury updates.")
-        return None
-
-# Display injury updates
-st.subheader("Injury Updates")
-team_id = st.text_input("Enter Team ID to Fetch Injury Updates:")
-if st.button("Fetch Injury Updates"):
-    injuries = fetch_injury_updates(team_id)
-    if injuries:
-        st.write(pd.DataFrame(injuries.get("injuries", [])).T)
