@@ -8,8 +8,66 @@ import xgboost as xgb
 import requests
 import plotly.express as px
 
+# Custom CSS for a beautiful design
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #f0f2f6; /* Light gray background */
+        color: #333333; /* Dark gray font color */
+        font-family: 'Arial', sans-serif;
+    }
+    .stButton>button {
+        background-color: #007BFF; /* Blue button color */
+        color: white;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+    .stButton>button:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+    .stTextInput>div>div>input {
+        background-color: #ffffff;
+        border: 1px solid #cccccc; /* Light gray border for inputs */
+        border-radius: 5px;
+        padding: 10px;
+        color: #333333;
+    }
+    .stHeader .stMarkdown {
+        color: #007BFF; /* Blue header color */
+    }
+    .stMarkdown {
+        color: #555555; /* Slightly lighter main text color */
+    }
+    .stDataFrame {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background-color: #ffffff;
+        padding: 10px;
+    }
+    .stExpander {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #eeeeee;
+        padding: 10px;
+    }
+    .sidebar .sidebar-content {
+        background-color: #e6e9ef; /* Light sidebar background */
+        color: #333333;
+    }
+    .sidebar .st-ef { /* Adjust sidebar header color if needed */
+        color: #007BFF;
+    }
+    """,
+    unsafe_allow_html=True
+)
+
 # Title of the app
-st.title("Ultimate Football Match Prediction and Bet Analysis")
+st.title("⚽ Ultimate Football Match Prediction and Bet Analysis ⚽")
 
 # Load enhanced dataset
 @st.cache_data
@@ -32,7 +90,10 @@ data = load_enhanced_data()
 # Train an advanced model (XGBoost)
 def train_advanced_model(data):
     features = pd.get_dummies(data[['home_team', 'away_team', 'home_form', 'away_form', 'head_to_head']])
-    target = data['result']
+    # Convert categorical target to numerical
+    result_mapping = {'Win': 0, 'Lose': 1, 'Draw': 2}
+    target = data['result'].map(result_mapping)
+
     X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
     model = xgb.XGBClassifier()
     model.fit(X_train, y_train)
@@ -52,8 +113,11 @@ away_team = st.sidebar.selectbox("Away Team", data['away_team'].unique())
 if st.sidebar.button("Predict Match Outcome"):
     input_data = pd.get_dummies(pd.DataFrame({'home_team': [home_team], 'away_team': [away_team]}))
     input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
-    prediction = model.predict(input_data)[0]
-    st.success(f"Predicted Outcome: {prediction}")
+    prediction_numeric = model.predict(input_data)[0]
+    # Convert numerical prediction back to categorical
+    reverse_result_mapping = {0: 'Win', 1: 'Lose', 2: 'Draw'}
+    prediction_categorical = reverse_result_mapping[prediction_numeric]
+    st.success(f"Predicted Outcome: {prediction_categorical}")
 
 # Bookie selection and bet code analysis
 st.sidebar.header("Bet Code Analysis")
@@ -177,15 +241,25 @@ def fetch_live_data():
 if st.sidebar.button("Fetch Live Matches"):
     live_data = fetch_live_data()
     if live_data:
-        st.subheader("Live Matches")
+        st.subheader("⚽ Live Matches")
         for match in live_data['matches']:
             st.write(f"{match['homeTeam']['name']} vs {match['awayTeam']['name']} - {match['score']['fullTime']['homeTeam']}-{match['score']['fullTime']['awayTeam']}")
 
 # Display historical data
-st.subheader("Historical Match Data")
+st.subheader("📊 Historical Match Data")
 st.write(data)
 
 # Advanced Visualizations
-st.subheader("Advanced Visualizations")
+st.subheader("📈 Advanced Visualizations")
 fig = px.bar(data, x='home_team', y='home_goals', color='result', title="Home Team Goals by Result")
 st.plotly_chart(fig)
+
+# Footer
+st.markdown(
+    """
+    <div style="text-align: center; padding: 20px; background-color: #007BFF; color: white; border-radius: 8px;">
+        <p>© 2023 Football Prediction App. All rights reserved.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
